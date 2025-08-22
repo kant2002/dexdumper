@@ -1,0 +1,24 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath depends.proguard_gradle
+    }
+}
+
+plugins {
+    id 'application'
+}
+
+mainClassName = 'org.kant2002.dexdumper.Main'
+
+dependencies {
+    implementation depends.dexlib2
+    implementation depends.jcommander
+
+    testImplementation depends.junit
+}
+
+processResources.inputs.property('version', version)
+processResources.expand('version': version)

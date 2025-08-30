@@ -3,9 +3,17 @@ package org.kant2002.dexdumper;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.Properties;
+
+import org.jf.dexlib2.DexFileFactory;
+import org.jf.dexlib2.dexbacked.DexBackedDexFile;
+import org.jf.dexlib2.dexbacked.raw.util.DexAnnotator;
+import org.jf.dexlib2.iface.DexFile;
 
 public class Main {
     public static final String VERSION = loadVersion();
@@ -17,6 +25,10 @@ public class Main {
     @Parameter(names = {"--version", "-v"}, help = true,
             description = "Print the version of dexdumper and then exit")
     public boolean version;
+
+    @Parameter(names = {"--source", "-s"},
+            description = "Source DEX file from which dump metadata")
+    public String source;
 
     public Main() {}
 
@@ -32,9 +44,25 @@ public class Main {
             version();
         }
 
-        if (jc.getParsedCommand() == null || main.help) {
+        if (main.help) {
             jc.usage();
             return;
+        }
+
+        try {
+            DexBackedDexFile dexFile = DexFileFactory.loadDexFile(main.source, null);
+            Writer writer = new BufferedWriter(new OutputStreamWriter(System.out));
+
+            try {
+                PlainAnnotators annotator = new PlainAnnotators(dexFile, 120);
+                annotator.writeAnnotations(writer);
+                writer.flush();
+            } finally {
+                writer.close();
+            }
+        } catch (IOException e) {
+            System.err.println("Error: " + e.getMessage());
+            System.exit(1);
         }
     }
 
